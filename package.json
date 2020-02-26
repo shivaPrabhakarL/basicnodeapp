@@ -1,0 +1,29 @@
+{
+  "name": "some",
+  "version": "1.0.0",
+  "description": "learning sockets",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "connect-flash": "^0.1.1",
+    "ejs": "^3.0.1",
+    "express": "^4.17.1",
+    "express-messages": "^1.0.1",
+    "express-session": "^1.15.3",
+    "express-validator": "^3.2.0",
+    "mongodb": "*",
+    "mongoose": "^5.9.1",
+    "mongoose-unique-validator": "*",
+    "nodemon": "^2.0.2",
+    "passport": "^0.3.2",
+    "passport-local": "^1.0.0",
+    "passport-local-mongoose": "^6.0.1",
+    "socket.io": "*"
+  }
+}
