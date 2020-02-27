@@ -1,6 +1,6 @@
 <html>
     <head>
-
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     </head>
     <body>
         
@@ -35,18 +35,20 @@
                 return document.getElementById(id);
             }
 
-            //console.log();
+            console.log(name);
 
             // Get Elements
             var status = element('status');
             var messages = element('messages');
             var textarea = element('textarea');
+            
            // var username = element('username');
             var clearBtn = element('clear');
             var sendBtn = element('send');
-
+            var name = "<%= name %>";
+            console.log(name);
             // Set default status
-           
+           console.log("some")
 
             // Connect to socket.io
             var socket = io.connect('http://127.0.0.1:4000');
@@ -57,13 +59,13 @@
 
                 // Handle Output
                 socket.on('output', function(data){
-                    //console.log(data);
+                    console.log("data = ",data);
                     if(data.length){
                         for(var x = 0;x < data.length;x++){
                             // Build out message div
                             var message = document.createElement('div');
                             message.setAttribute('class', 'chat-message');
-                            message.textContent = data[x].name+": "+data[x].message;
+                            message.textContent = data[x].sender+": "+data[x].message;
                             messages.appendChild(message);
                             messages.insertBefore(message, messages.firstChild);
                         }
@@ -73,7 +75,7 @@
                 // Get Status From Server
                 socket.on('status', function(data){
                     // get message status
-                    setStatus((typeof data === 'object')? data.message : data);
+                    // setStatus((typeof data === 'object')? data.message : data);
 
                     // If status is clear, clear text
                     if(data.clear){
@@ -84,9 +86,10 @@
                 // Handle Input
                 textarea.addEventListener('keydown', function(event){
                     if(event.which === 13 && event.shiftKey == false){
+                        console.log("here");
                         // Emit to server input
                         socket.emit('input', {
-                            // name:username.value,
+                            name:"<%= name %>",
                             message:textarea.value
                         });
 
@@ -100,8 +103,10 @@
                 });
 
                 sendBtn.addEventListener('click',function(){
+                    console.log("kdunfwiulrivaeifskd");
+                    console.log(textarea.value);
                     socket.emit('input', {
-                            // name:username.value,
+                            name: "<%= name %>" ,
                             message:textarea.value
                     
                         });
@@ -112,7 +117,7 @@
                 });
             }
 
-        })();
+        });
     </script>
     </body>
 </html>

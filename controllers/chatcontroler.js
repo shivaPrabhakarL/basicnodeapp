@@ -2,7 +2,7 @@ const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 //const passport = require('passport');
 const expressvalidator = require('express-validator');
-const db = require('../validate/database');
+const db = require('../config/database');
 const client = require('socket.io').listen(4000).sockets;
 
 
@@ -16,12 +16,19 @@ db.once('open', function () {
 const Chat = require('../DBSchemas/chat');
 const User = require('../DBSchemas/user');
 
+Chat.find({},function(err,dat){
+    if(err) throw err;
+    console.log("chat data = ",dat);
+})
+
 module.exports = function(app){
     app.get('/chat',function(req,res){
+
+        //console.log(req);
         let userId = req.session.passport.user;
-        var name;
+        //console.log(req.session);
         User.findById(userId,function(err,doc){
-            name = doc.name;
+           var name1 = doc.name;
            // console.log(name);
        
        // console.log(name);
@@ -45,7 +52,11 @@ module.exports = function(app){
     
             // Handle input events
             socket.on('input', function(data){
-                //let name = data.name;
+                console.log("kdunfwiulrivaeifskd");
+                console.log("ther");
+                console.log(data);
+
+                let name = data.name;
                 let message = data.message;
 
                 // Check for name and message
@@ -54,7 +65,8 @@ module.exports = function(app){
                     sendStatus('Please enter a name and message');
                 } else {
                     // Insert message
-                    Chat({sender: name, message: message}).save(function(){
+                    Chat({sender: req.session.passport.user , message: message}).save(function(){
+                        console.log("chatcontrol = ",[data]);
                         client.emit('output', [data]);
     
                         // Send status object
@@ -75,8 +87,11 @@ module.exports = function(app){
             //     });
             // });
         });
+        
+        res.render('chat',{name : name1, id:req.session.passport.user});
     });
-        res.render('chat');
+        //res.render('chat');
+       
     })
 
 }

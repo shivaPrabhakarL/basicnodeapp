@@ -1,9 +1,9 @@
-
+const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const expressvalidator = require('express-validator');
-const db = require('../validate/database');
+const db = require('../config/database');
 
 
 const urlEncodedParser = bodyParser.urlencoded({extended: false});
@@ -82,28 +82,37 @@ module.exports = function(app){
                 password:password
                 });
 
-                bcrypt.genSalt(10, function(err, salt){
-                    bcrypt.hash(newUser.password, salt, function(err, hash){
+                // bcrypt.genSalt(10, function(err, salt){
+                //     bcrypt.hash(newUser.password, salt, function(err, hash){
+                //     if(err){
+                //         console.log(err);
+                //     }
+                //     newUser.password = hash;
+                //     newUser.save(function(err){
+                //         if(err){
+                //         if(err.errors.email){
+                //             console.log(err.errors.email.message);
+                //         }  
+                //         else if(err.errors.username){
+                //             console.log("error = ",err.errors.username.message);
+                //         }   
+                //     }                  
+                //          else {
+                //         req.flash('success','You are now registered and can log in');
+                //         res.redirect('/login');
+                //         }
+                //     });
+                //     });
+                // });
+
+                User.createUser(newUser,function(err,user){
                     if(err){
-                        console.log(err);
+                        return res.json({Signup: false, message:'User is not registered'});
                     }
-                    newUser.password = hash;
-                    newUser.save(function(err){
-                        if(err){
-                        if(err.errors.email){
-                            console.log(err.errors.email.message);
-                        }  
-                        else if(err.errors.username){
-                            console.log("error = ",err.errors.username.message);
-                        }   
-                    }                  
-                         else {
-                        req.flash('success','You are now registered and can log in');
-                        res.redirect('/login');
-                        }
-                    });
-                    });
-                });
+                    else{
+                        return res.json({Signup: true, message:'User is registered'});
+                    }
+                })
             }
         });
     });
@@ -134,10 +143,38 @@ module.exports = function(app){
         //       });
         //     });
         
-        passport.authenticate('local', { successRedirect:'/chat',
-            failureRedirect:'/login',
-            failureFlash: true
-          })(req, res, next);
+        // passport.authenticate('local', { successRedirect:'/chat',
+        //     failureRedirect:'/login',
+        //     failureFlash: true
+        //   })(req, res, next);
+
+        User.getUserByUsername(username,function(err,user){
+            if(err) throw err;
+           // user.toObject({ getters: true })
+           
+            if(!user){
+                return res.json({Login: false, message:'No such user found'});   
+            }
+            // console.log(typeof(user.password));
+            // console.log(user.$toObject());
+            // var userObj = JSON.parse(JSON.stringify(user)); 
+            // console.log(userObj.password);
+             console.log(user[0].password);
+            User.comparePassword(req.body.logpassword,user[0].password,function(err,isMatch){
+                if(err) throw err;
+                if(isMatch){
+                    var token = jwt.sign(user,config.secret,{expiresIn : 6000000 });
+                    res.json({Login: true, token : token, user:{
+                        id: user._id,
+                        name: user.name,
+                        username :user.username,
+                        email: user.email
+                    }});
+                }else{
+                    return res.json({Login: false, message:'Password doesn\'t match.'});
+                }
+            })
+        })
       });
 
    

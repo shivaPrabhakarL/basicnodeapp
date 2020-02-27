@@ -37,7 +37,7 @@ app.use(session({
 
   app.use(passport.initialize());
   app.use(passport.session());
-  require('./validate/passport')(passport);
+  require('./config/passport')(passport);
   // Passport Middleware
   
 
