@@ -3,7 +3,9 @@ var uniqueValidator = require('mongoose-unique-validator');
 var passportLocalMongoose = require('passport-local-mongoose'); 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-
+mongoose.set('useNewUrlParser', true);
+mongoose.set('useFindAndModify', false);
+mongoose.set('useCreateIndex', true);
 
 // User Schema
 const UserSchema = mongoose.Schema({
@@ -35,21 +37,37 @@ tokenExp :{
 
 UserSchema.set('toObject', { virtuals: true });
 
-const User = module.exports = mongoose.model('User', UserSchema);
+UserSchema.pre('save', function( next ) {
+  var user = this;
+  
+  if(user.isModified('password')){    
+
+      bcrypt.genSalt(saltRounds, function(err, salt){
+          if(err) return next(err);
+  
+          bcrypt.hash(user.password, salt, function(err, hash){
+              if(err) return next(err);
+              user.password = hash 
+              next()
+          })
+      })
+  } else {
+      next()
+  }
+});
+
+
 
 UserSchema.plugin(uniqueValidator);
 UserSchema.plugin(passportLocalMongoose); 
+
+const User = module.exports = mongoose.model('User', UserSchema);
 
 module.exports.comparePassword = function(plainPassword, hash, callback){
   //console.log(plainPassword);
   bcrypt.compare(plainPassword, hash, function(err, isMatch){
     if(err) throw err;
-    // if(isMatch){
-    //   return done(null, user);
-    // } else {
-    //   console.log('Wrong password');
-    //   return done(null, false, {message: 'Wrong password'});
-    // }
+   
     callback(null,isMatch);
   });
 }
@@ -72,6 +90,22 @@ module.exports.createUser = function(newUser,callback){
     newUser.password = hash;
     newUser.save(callback);
   }) 
+  })
+}
+
+module.exports.findByToken = function (token, callback) {
+  var user = this;
+  //console.log("token in find = ",token);
+  jwt.verify(token,'yoursecret',function(err, decode){
+    if(err) throw err;
+   // console.log("docode = ",decode);
+      user.findOne({"_id":decode}, function(err, user){
+          if(err) {
+            console.log(err);
+            return callback(err);
+          }
+          callback(null, user);
+      })
   })
 }
 

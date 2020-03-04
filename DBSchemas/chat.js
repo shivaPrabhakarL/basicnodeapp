@@ -6,18 +6,16 @@ const chatSchema = mongoose.Schema({
         type:String,
     },
     sender: {
-        type: Schema.Types.ObjectId,
+        type: String ,
        ref: 'User'
     },
-    type : {
-        type: String
-    },
-    reciever: {
-        type: Schema.Types.ObjectId,
-       ref: 'User'
-    },
+   
 }, {timestamps: true});
+
+
 
 const Chat = module.exports = mongoose.model('Chat', chatSchema);
 
- 
+module.exports.insert = function(newChat,callback){
+    newChat.save(callback);
+}

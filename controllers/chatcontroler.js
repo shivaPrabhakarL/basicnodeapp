@@ -1,97 +1,159 @@
-const bodyParser = require('body-parser');
-const bcrypt = require('bcryptjs');
-//const passport = require('passport');
-const expressvalidator = require('express-validator');
 const db = require('../config/database');
-const client = require('socket.io').listen(4000).sockets;
+const server = require('socket.io').listen(4000);
+const { auth } = require("../controllers/auth");
+const socket  = server.sockets;
+const cookie = require('cookie');
+//const connect = require('connect');
+const expressSession = require('express-session');
+//var redisAdapter = require('socket.io-redis');
+const config = require('../config/key');
+//var ConnectRedis = require('connect-redis')(expressSession);
+//var redisSession = new ConnectRedis({host: '127.0.0.1', port: '4000'});
 
 
-const urlEncodedParser = bodyParser.urlencoded({extended: false});
+
 
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function () {
     console.log('Connected');
 });
 
+//const pChat = server.of('/chat');
+
 const Chat = require('../DBSchemas/chat');
 const User = require('../DBSchemas/user');
 
 Chat.find({},function(err,dat){
     if(err) throw err;
-    console.log("chat data = ",dat);
+    //console.log("chat data = ",dat);
 })
 
 module.exports = function(app){
-    app.get('/chat',function(req,res){
 
-        //console.log(req);
-        let userId = req.session.passport.user;
-        //console.log(req.session);
-        User.findById(userId,function(err,doc){
-           var name1 = doc.name;
-           // console.log(name);
+    function authenticate(socket, data, callback) {
+        var username = data.username;
+        var password = data.password;
        
-       // console.log(name);
-        client.on('connection', function(socket){
-            // let chat = db.collection('chats');
-    
-            // Create function to send status
-            sendStatus = function(s){
-                socket.emit('status', s);
-            }
-    
-            // Get chats from mongo collection
-            // chat.find().limit(100).sort({_id:1}).toArray(function(err, res){
-            //     if(err){
-            //         throw err;
-            //     }
-    
-            //     // Emit the messages
-            //     socket.emit('output', res);
-            // });
-    
-            // Handle input events
-            socket.on('input', function(data){
-                console.log("kdunfwiulrivaeifskd");
-                console.log("ther");
-                console.log(data);
-
-                let name = data.name;
-                let message = data.message;
-
-                // Check for name and message
-                if(name == '' || message == ''){
-                    // Send error status
-                    sendStatus('Please enter a name and message');
-                } else {
-                    // Insert message
-                    Chat({sender: req.session.passport.user , message: message}).save(function(){
-                        console.log("chatcontrol = ",[data]);
-                        client.emit('output', [data]);
-    
-                        // Send status object
-                        sendStatus({
-                            message: 'Message sent',
-                            clear: true
-                        });
-                    });
-                }
-            });
-    
-            // Handle clear
-            // socket.on('clear', function(data){
-            //     // Remove all chats from collection
-            //     chat.remove({}, function(){
-            //         // Emit cleared
-            //         socket.emit('cleared');
-            //     });
-            // });
+        User.getUserByUsername({username:username}, function(err, user) {
+          if (err || !user) return callback(new Error("User not found"));
+          return callback(null, user.password == password);
         });
+      }
         
-        res.render('chat',{name : name1, id:req.session.passport.user});
-    });
-        //res.render('chat');
+      function postAuthenticate(socket, data) {
+        var username = data.username;
        
-    })
+        db.getUserByUsername({username:username}, function(err, user) {
+          socket.client.user = user;
+        });
+      }
+
+      function disconnect(socket) {
+        console.log(socket.id + ' disconnected');
+      }
+
+      require('socketio-auth')(server, {
+        authenticate: authenticate,
+        postAuthenticate: postAuthenticate,
+        disconnect: disconnect,
+        timeout: 1000
+      });
+
+    server.on('connect',function(socket){
+        console.log("<<<<<<<< server socket connected >>>>>..");
+        bindSocketEvents(socket);
+    });
+
+    function bindSocketEvents(socket) {
+        socket.on('input', inputEvent);
+
+        // Handle clear
+        socket.on('clear', clearEvent);
+        socket.on('disconnect', function() {
+            console.log('discoennnnnnn');
+            unbindSocketEvents(socket);
+        })
+    }
+    function unbindSocketEvents(socket) {
+        console.log('off caleddd....');
+        socket.removeAllListeners('input');
+
+        // Handle clear
+        socket.removeAllListeners('clear');
+        console.log('off caleddd....end');
+    }
+   
+    function inputEvent(data){
+        let id = data.name.toString();
+        let message = data.message;
+
+        console.log("id",id);
+        User.findOne({_id:id},function(err,user){
+            console.log("<<<<<<<<<<,user user>>>>>>>>>>>.")
+            if(err) throw err;
+            name = user.name;
+            // console.log("name in user",user.name);
+            // console.log("name in name=  ",name);
+            if(name == '' || message == ''){
+                // Send error status
+                sendStatus('Please enter a name and message');
+            } else {
+                // Insert message
+                let chat = new Chat({
+                    sender:name,
+                    message:message,
+                    reciever:'',
+
+                });
+                Chat.insert(chat,function(err,data){
+                    if(err) throw err;
+                    console.log("=====================insert=========================");
+                    server.emit('output', [data]);
+
+                    // Send status object
+                    sendStatus({
+                        message: 'Message sent',
+                        clear: true
+                    });
+                });
+            }
+        });
+    }
+
+    function clearEvent(){
+        // Remove all chats from collection
+        Chat.remove({}, function(){
+            // Emit cleared
+            socket.emit('cleared');
+        });
+    }
+
+
+    app.get('/chat',auth,function(req,res){
+        res.cookie("w_auth", req.user.token);
+        res.cookie("w_auth", req.user.token);
+        sendStatus = function(){
+            // s.emit('status', s);
+        }
+
+       
+
+        
+       
+        console.log("socket connection ");
+        console.log(req.user);
+      
+        res.render('chat',{
+            _id: req.user._id,
+            isAuth: true,
+            email: req.user.email,
+            name: req.user.name,
+            username: req.user.username,
+            password: req.user.password
+       });
+   
+       
+        
+    });
 
 }

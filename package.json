@@ -11,21 +11,30 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
+    "connect": "^3.7.0",
     "connect-flash": "^0.1.1",
+    "connect-redis": "^4.0.4",
+    "cookie": "^0.4.0",
+    "cookie-parser": "^1.4.4",
+    "cors": "^2.8.5",
     "ejs": "^3.0.1",
     "express": "^4.17.1",
+    "express-jwt": "^5.3.1",
     "express-messages": "^1.0.1",
     "express-session": "^1.15.3",
     "express-validator": "^3.2.0",
     "jsonwebtoken": "^8.5.1",
     "mongodb": "*",
-    "mongoose": "^5.9.1",
+    "mongoose": "^5.9.2",
     "mongoose-unique-validator": "*",
     "nodemon": "^2.0.2",
     "passport": "^0.3.2",
+    "passport-http-bearer": "^1.0.1",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "passport-local-mongoose": "^6.0.1",
-    "socket.io": "*"
+    "socket.io": "*",
+    "socket.io-redis": "^5.2.0",
+    "socketio-auth": "^0.1.1"
   }
 }

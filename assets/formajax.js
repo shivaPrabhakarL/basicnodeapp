@@ -37,6 +37,7 @@ $(document).ready(function(){
           type: 'POST',
           url: '/login',
           data: loginData,
+          
           success: function(data){
             //do something with the data via front-end framework
             console.log("success");
@@ -46,6 +47,18 @@ $(document).ready(function(){
         return false;
   
     });
+
+    $.ajax({
+      url:  '/chat',
+      type: 'GET',
+      beforeSend: function(xhr) {
+        xhr.setRequestHeader('Authorization', window.localStorage.getItem('token'));
+      },
+      success: function(data) {
+        console.log(data);
+      },
+      error: console.log("Error")
+});
 
 
 });

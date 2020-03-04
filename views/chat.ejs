@@ -6,14 +6,15 @@
         
         <div class="container">
             <div class="row">
+                <h1>Connected as <%= name %></h1>
                 <div class="col-md-6 offset-md-3 col-sm-12">
                     <h1 class="text-center">
                         MongoChat 
-                        <button id="clear" class="btn btn-danger">Clear</button>
+                       
                     </h1>
                     <div id="status"></div>
                     <div id="chat">
-                        
+                        <button id="clear" class="btn btn-danger">Clear</button>
                         <br>
                         <div class="card">
                             <div id="messages" class="card-block">
@@ -21,7 +22,7 @@
                             </div>
                         </div>
                         <br>
-                        <textarea id="textarea" class="form-control" placeholder="Enter message..."></textarea>
+                        <textarea  id="textarea" class="form-control" placeholder="Enter message..."></textarea>
                         <button id="send" class="btn btn-danger">Send</button>
                     </div>
                 </div>
@@ -35,47 +36,75 @@
                 return document.getElementById(id);
             }
 
-            console.log(name);
-
             // Get Elements
             var status = element('status');
             var messages = element('messages');
             var textarea = element('textarea');
-            
-           // var username = element('username');
+            var username = element('username');
             var clearBtn = element('clear');
             var sendBtn = element('send');
-            var name = "<%= name %>";
-            console.log(name);
             // Set default status
-           console.log("some")
+            var statusDefault = status.textContent;
 
+            var setStatus = function(s){
+                // Set status
+                status.textContent = s;
+
+                if(s !== statusDefault){
+                    var delay = setTimeout(function(){
+                        setStatus(statusDefault);
+                    }, 4000);
+                }
+            }
+            if(socket === undefined){
+                var socket = io.connect('http://127.0.0.1:4000');
+
+            }
             // Connect to socket.io
-            var socket = io.connect('http://127.0.0.1:4000');
 
             // Check for connection
             if(socket !== undefined){
+                //socket.setMaxListeners(2);
                 console.log('Connected to socket...');
 
+                socket.on('connect', (host, port) => { 
+                    console.log(`client connected to ${host}:${port}`); 
+                    socket.emit('authentication', {username: "John", password: "secret"});
+                    socket.on('unauthorized', function(err){
+                        if(err){
+                            console.log("There was an error with the authentication:", err.message);
+                        }
+                    });
+                   // console.log(req);
+                   // client.write(‘Hello, I am ${client.address().address}’); 
+                   
+                }); 
+                // socket.on('disconnect', function () {
+                //     socket.emit('user disconnected');
+                // });
                 // Handle Output
+               
+                
                 socket.on('output', function(data){
-                    console.log("data = ",data);
-                    if(data.length){
-                        for(var x = 0;x < data.length;x++){
+                    if(data.length>0){
+                        console.log(data.length);
+                        console.log("<<<<<<<<<<<<<<<<<<<<<<<<<< output chat ejs file>>>>>>>>>>>>>>>>>>>>>>>>>>.")
+                        console.log("data = ",data);
+                        // for(var x = 0;x < data.length;x++){
                             // Build out message div
                             var message = document.createElement('div');
                             message.setAttribute('class', 'chat-message');
-                            message.textContent = data[x].sender+": "+data[x].message;
+                            message.textContent = data[0].sender+": "+data[0].message;
                             messages.appendChild(message);
-                            messages.insertBefore(message, messages.firstChild);
-                        }
+                            messages.insertBefore(message, messages.lastChild);
+                       // }
                     }
                 });
 
                 // Get Status From Server
                 socket.on('status', function(data){
                     // get message status
-                    // setStatus((typeof data === 'object')? data.message : data);
+                    setStatus((typeof data === 'object')? data.message : data);
 
                     // If status is clear, clear text
                     if(data.clear){
@@ -85,39 +114,41 @@
 
                 // Handle Input
                 textarea.addEventListener('keydown', function(event){
-                    if(event.which === 13 && event.shiftKey == false){
-                        console.log("here");
+                    if(event.which === 13){
                         // Emit to server input
                         socket.emit('input', {
-                            name:"<%= name %>",
+                            name:"<%= _id %>",
+                            message:textarea.value
+                        }); 
+                    }
+                });
+
+            
+
+                $("#send").unbind()
+                .on('click',function(e){
+                    e.preventDefault();
+                    console.log("<<<<<<<<<<<===== click ========>>>>>>>>>>>>");
+                    socket.emit('input', {
+                            name:"<%= _id %>",
                             message:textarea.value
                         });
-
-                        event.preventDefault();
-                    }
-                })
+                   e.preventDefault();
+                });
 
                 // Handle Chat Clear
                 clearBtn.addEventListener('click', function(){
                     socket.emit('clear');
                 });
 
-                sendBtn.addEventListener('click',function(){
-                    console.log("kdunfwiulrivaeifskd");
-                    console.log(textarea.value);
-                    socket.emit('input', {
-                            name: "<%= name %>" ,
-                            message:textarea.value
-                    
-                        });
-                });
                 // Clear Message
                 socket.on('cleared', function(){
                     messages.textContent = '';
                 });
+            
             }
 
-        });
+        })();
     </script>
     </body>
 </html>

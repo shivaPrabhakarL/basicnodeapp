@@ -1,13 +1,14 @@
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
-const passport = require('passport');
 const expressvalidator = require('express-validator');
 const db = require('../config/database');
-
-
+const chat = require('../DBSchemas/chat');
+const config = require('../config/key');
+const server = require('socket.io')();
+//server.listen(4000);
 const urlEncodedParser = bodyParser.urlencoded({extended: false});
-
+const { auth } = require("../controllers/auth");
 
 
 
@@ -18,9 +19,12 @@ db.once('open', function () {
 
 const User = require('../DBSchemas/user');
 
-// User.deleteMany({username:'shivaI7'},function(err){
-//     if(err) throw err;
-// });
+// async function setRespVar(res,user1,token){
+//     console.log(user1.token);
+    
+//     result =  await Promise.reslove(res);
+//     return result;
+// }
 
 module.exports = function(app){
 
@@ -31,7 +35,8 @@ module.exports = function(app){
     });
 
     app.post('/register', urlEncodedParser ,function(req,res){
-
+        var loginbool ;
+        var sendData ;
         const name = req.body.name;
         console.log(name);
         const email = req.body.email;
@@ -46,6 +51,7 @@ module.exports = function(app){
             if(err) throw err;
             if(user){
              req.flash('failure','Email already exists');
+             sendData = {Signup: false, message:'Email already exists'};
               return;
             }
         });
@@ -54,63 +60,43 @@ module.exports = function(app){
             if(err) throw err;
             if(user){
               req.flash('failure','Username already exists');
+              sendData = {Signup: false, message:'Username already exists'};
               return;
             }
         });
         req.checkBody('password', 'Password is required').notEmpty();
         req.checkBody('password2', 'Passwords do not match').equals(req.body.password);
-        //console.log(req.body);
-        // User(req.body).save(function(err,data){
-        //     if(err) throw err;
-        // });
-        // var msg = "login to continue";
-        // res.json({message : msg});
+        
         console.log("after username and email validation");
-         req.getValidationResult().then(function(errors){
-        if(!errors.isEmpty()){
-            console.log("errors = ",errors);
-            throw errors;
-            // res.render('index', {
-            //   errors:errors
-            // });
-          } 
+         req.getValidationResult().then(function(result){
+            console.log(result.isEmpty());
+            if (!result.isEmpty()) {
+                var errors = result.array().map(function (elem) {
+                    return elem.msg;
+                });
+                console.log('There are following validation errors: ' + errors.join('&&'));
+                res.render('index', { errors: errors });
+            } 
         else {
                 let newUser = new User({
                 name:name,
                 email:email,
                 username:username,
-                password:password
+                password:password,
+                token:"",
+                tokenExp : ""
                 });
 
-                // bcrypt.genSalt(10, function(err, salt){
-                //     bcrypt.hash(newUser.password, salt, function(err, hash){
-                //     if(err){
-                //         console.log(err);
-                //     }
-                //     newUser.password = hash;
-                //     newUser.save(function(err){
-                //         if(err){
-                //         if(err.errors.email){
-                //             console.log(err.errors.email.message);
-                //         }  
-                //         else if(err.errors.username){
-                //             console.log("error = ",err.errors.username.message);
-                //         }   
-                //     }                  
-                //          else {
-                //         req.flash('success','You are now registered and can log in');
-                //         res.redirect('/login');
-                //         }
-                //     });
-                //     });
-                // });
+               
 
                 User.createUser(newUser,function(err,user){
                     if(err){
+                        throw err;
                         return res.json({Signup: false, message:'User is not registered'});
                     }
                     else{
-                        return res.json({Signup: true, message:'User is registered'});
+                        return res.render('loginf',{Signup: true, message:'User is registered'});
+                      
                     }
                 })
             }
@@ -118,64 +104,78 @@ module.exports = function(app){
     });
 
     app.get('/login', function(req, res){
-        res.render('loginf');
+        res.render('loginf',{
+            data: 'data'
+        });
     });
 
-    app.post('/login', urlEncodedParser ,function(req, res, next){
-        //console.log(req.body);
+    app.post('/login', urlEncodedParser ,function(req, res ){
+       
         let username = req.body.logusername;
         let password = req.body.logpassword;
         let query = {username:username};
-        // User.findOne(query, function(err, user){
-        //     if(err) throw err;
-        //     if(!user){
-        //       console.log('No user found');
-        //       res.redirect('/login');
-        //     }
-        //     bcrypt.compare(password, user.password, function(err, isMatch){
-        //         if(err) throw err;
-        //         if(isMatch){
-        //           res.redirect('/chat');
-        //         } else {
-        //           console.log('Wrong password');
-        //           res.redirect('/login');
-        //         }
-        //       });
-        //     });
-        
-        // passport.authenticate('local', { successRedirect:'/chat',
-        //     failureRedirect:'/login',
-        //     failureFlash: true
-        //   })(req, res, next);
+       if(req.cookie !== undefined  ){
+           if(req.cookie.w_auth !== '')
+                res.redirect('/chat');
+       }
+       if(req.cookie !== undefined ){
+           if(req.cookie.w_authExp !== '')
+                res.redirect('/chat');
+       }
+
 
         User.getUserByUsername(username,function(err,user){
             if(err) throw err;
-           // user.toObject({ getters: true })
+         
            
-            if(!user){
+            if(user.length === 0){
                 return res.json({Login: false, message:'No such user found'});   
             }
-            // console.log(typeof(user.password));
-            // console.log(user.$toObject());
-            // var userObj = JSON.parse(JSON.stringify(user)); 
-            // console.log(userObj.password);
-             console.log(user[0].password);
-            User.comparePassword(req.body.logpassword,user[0].password,function(err,isMatch){
+          
+             var user1 = user[0];
+          
+            User.comparePassword(req.body.logpassword,user1.password,function(err,isMatch){
                 if(err) throw err;
                 if(isMatch){
-                    var token = jwt.sign(user,config.secret,{expiresIn : 6000000 });
-                    res.json({Login: true, token : token, user:{
-                        id: user._id,
-                        name: user.name,
-                        username :user.username,
-                        email: user.email
-                    }});
+                    var id = user1._id;
+                    var token = jwt.sign({_id:id},config.secret,{expiresIn : 6000000 });
+                 
+                    User.findOneAndUpdate({ _id: user1._id }, { token: token },{new:true},function(err,data){
+                        if(err) throw err;
+                        // console.log("someone");
+                        // console.log("data = ",data);
+                       // res.header('Authorization','JWT '+token);
+                        res.cookie("w_authExp", data.token);
+                        res.cookie("w_auth",data.token);
+                        res.redirect('/chat');
+                        
+
+                    })
+                    
+                       // console.log("none");
+                        
+                    
                 }else{
                     return res.json({Login: false, message:'Password doesn\'t match.'});
                 }
             })
         })
       });
+
+      app.get("/logout", auth, (req, res) => {
+        User.findOneAndUpdate({ _id: req.user._id }, { token: "", tokenExp: "" }, (err, doc) => {
+            if (err) return res.json({ success: false, err });
+            server.on('disconnect', function() {
+                console.log("<<<<<<<<<<<<<<<<<<<<disconected>>>>>>>>>>>>>>")
+            });
+            res.cookie("w_auth","");
+            res.cookie("w_authExp","");
+            chat.deleteMany({},function(err,data){
+                if(err) throw err;
+            })
+            res.redirect('/login');
+        });
+    });
 
    
     }
