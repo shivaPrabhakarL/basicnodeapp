@@ -1,15 +1,13 @@
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
-const bcrypt = require('bcryptjs');
 const expressvalidator = require('express-validator');
 const db = require('../config/database');
 const chat = require('../DBSchemas/chat');
 const config = require('../config/key');
 const server = require('socket.io')();
-//server.listen(4000);
 const urlEncodedParser = bodyParser.urlencoded({extended: false});
 const { auth } = require("../controllers/auth");
-
+const flash = require('flash');
 
 
 db.on('error', console.error.bind(console, 'connection error:'));
@@ -19,23 +17,16 @@ db.once('open', function () {
 
 const User = require('../DBSchemas/user');
 
-// async function setRespVar(res,user1,token){
-//     console.log(user1.token);
-    
-//     result =  await Promise.reslove(res);
-//     return result;
-// }
+
 
 module.exports = function(app){
-
-    app.use(expressvalidator());
 
     app.get('/register', function(req,res){
         res.render('index');    
     });
 
     app.post('/register', urlEncodedParser ,function(req,res){
-        var loginbool ;
+       
         var sendData ;
         const name = req.body.name;
         console.log(name);
@@ -104,9 +95,7 @@ module.exports = function(app){
     });
 
     app.get('/login', function(req, res){
-        res.render('loginf',{
-            data: 'data'
-        });
+        res.render('loginf');
     });
 
     app.post('/login', urlEncodedParser ,function(req, res ){
@@ -114,6 +103,8 @@ module.exports = function(app){
         let username = req.body.logusername;
         let password = req.body.logpassword;
         let query = {username:username};
+        // console.log("username = ",username);
+        // console.log("password = ",password);
        if(req.cookie !== undefined  ){
            if(req.cookie.w_auth !== '')
                 res.redirect('/chat');
@@ -126,27 +117,26 @@ module.exports = function(app){
 
         User.getUserByUsername(username,function(err,user){
             if(err) throw err;
-         
-           
             if(user.length === 0){
                 return res.json({Login: false, message:'No such user found'});   
             }
           
              var user1 = user[0];
-          
+            //console.log(user1);
             User.comparePassword(req.body.logpassword,user1.password,function(err,isMatch){
                 if(err) throw err;
                 if(isMatch){
                     var id = user1._id;
                     var token = jwt.sign({_id:id},config.secret,{expiresIn : 6000000 });
                  
-                    User.findOneAndUpdate({ _id: user1._id }, { token: token },{new:true},function(err,data){
+                    User.findOneAndUpdate({ _id: user1._id }, { token: token },{new : true},function(err,data){
                         if(err) throw err;
                         // console.log("someone");
                         // console.log("data = ",data);
                        // res.header('Authorization','JWT '+token);
                         res.cookie("w_authExp", data.token);
                         res.cookie("w_auth",data.token);
+                        
                         res.redirect('/chat');
                         
 

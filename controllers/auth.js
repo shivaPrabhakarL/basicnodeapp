@@ -1,6 +1,7 @@
 const User = require('../DBSchemas/user');
 
 let auth = (req, res, next) => {
+  //console.log("cookie = ",req.cookies);
   let token = req.cookies.w_auth;
   let token1 = req.cookies.w_authExp;
   

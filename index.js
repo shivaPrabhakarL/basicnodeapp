@@ -10,22 +10,35 @@ var expressValidator = require('express-validator');
 const cors = require('cors');
 const auth = require('./controllers/auth');
 const cookieParser = require('cookie-parser');
+const ejs = require('ejs'); 
 
 
-  app.use(cookieParser);
-  app.use(session);
+
+
+  //app.use(cookieParser());
+  
+  
+ // app.use(session());
 
 
 app.use(cors());
+
+
 app.use(expressValidator())
+
+
 app.use(bodyParser.json());
+
+
 app.use(express.static('./assets')); 
 app.use(session({
+  cookie: { maxAge: 60000 },
     secret: 'secret',
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     key: 'express.sid'
   }));
+ 
   app.use(expressValidator({
     errorFormatter: function(param, msg, value) {
         var namespace = param.split('.')
@@ -42,10 +55,11 @@ app.use(session({
       };
     }
   }));
-
   
 
-
+  app.use(require('flash')());
+  app.use(cookieParser());
+app.set('port',3030);
 
 app.set('view engine','ejs');
 

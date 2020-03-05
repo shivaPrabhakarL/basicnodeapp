@@ -33,8 +33,8 @@ module.exports = function(app){
     function authenticate(socket, data, callback) {
         var username = data.username;
         var password = data.password;
-       
-        User.getUserByUsername({username:username}, function(err, user) {
+        
+        User.findOne({username:username}, function(err, user) {
           if (err || !user) return callback(new Error("User not found"));
           return callback(null, user.password == password);
         });
@@ -43,12 +43,14 @@ module.exports = function(app){
       function postAuthenticate(socket, data) {
         var username = data.username;
        
-        db.getUserByUsername({username:username}, function(err, user) {
+        User.findOne({username:username}, function(err, user) {
+            
           socket.client.user = user;
         });
       }
 
       function disconnect(socket) {
+        console.log(socket.client.user,"=== user");
         console.log(socket.id + ' disconnected');
       }
 
@@ -63,6 +65,10 @@ module.exports = function(app){
         console.log("<<<<<<<< server socket connected >>>>>..");
         bindSocketEvents(socket);
     });
+
+    sendStatus = function(s){
+        socket.emit('status', s);
+   }
 
     function bindSocketEvents(socket) {
         socket.on('input', inputEvent);
@@ -132,16 +138,14 @@ module.exports = function(app){
     app.get('/chat',auth,function(req,res){
         res.cookie("w_auth", req.user.token);
         res.cookie("w_auth", req.user.token);
-        sendStatus = function(){
-            // s.emit('status', s);
-        }
+        
 
        
 
         
        
         console.log("socket connection ");
-        console.log(req.user);
+       // console.log(req.user);
       
         res.render('chat',{
             _id: req.user._id,

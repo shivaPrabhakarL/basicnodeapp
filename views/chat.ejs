@@ -14,7 +14,7 @@
                     </h1>
                     <div id="status"></div>
                     <div id="chat">
-                        <button id="clear" class="btn btn-danger">Clear</button>
+                        <button id="clear" class="btn btn-danger">Delete Chat</button>
                         <br>
                         <div class="card">
                             <div id="messages" class="card-block">
@@ -69,7 +69,7 @@
 
                 socket.on('connect', (host, port) => { 
                     console.log(`client connected to ${host}:${port}`); 
-                    socket.emit('authentication', {username: "John", password: "secret"});
+                    socket.emit('authentication', {username: "<%= username%>", password: "<%= password%>"});
                     socket.on('unauthorized', function(err){
                         if(err){
                             console.log("There was an error with the authentication:", err.message);

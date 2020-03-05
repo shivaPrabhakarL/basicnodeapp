@@ -35,26 +35,26 @@ tokenExp :{
 }
 });
 
-UserSchema.set('toObject', { virtuals: true });
+//UserSchema.set('toObject', { virtuals: true });
 
-UserSchema.pre('save', function( next ) {
-  var user = this;
+//UserSchema.pre('save', function( next ) {
+//   var user = this;
   
-  if(user.isModified('password')){    
+//   if(user.isModified('password')){    
 
-      bcrypt.genSalt(saltRounds, function(err, salt){
-          if(err) return next(err);
+//       bcrypt.genSalt(10, function(err, salt){
+//           if(err) return next(err);
   
-          bcrypt.hash(user.password, salt, function(err, hash){
-              if(err) return next(err);
-              user.password = hash 
-              next()
-          })
-      })
-  } else {
-      next()
-  }
-});
+//           bcrypt.hash(user.password, salt, function(err, hash){
+//               if(err) return next(err);
+//               user.password = hash 
+//               next()
+//           })
+//       })
+//   } else {
+//       next()
+//   }
+// });
 
 
 
@@ -65,9 +65,15 @@ const User = module.exports = mongoose.model('User', UserSchema);
 
 module.exports.comparePassword = function(plainPassword, hash, callback){
   //console.log(plainPassword);
+  // console.log(plainPassword);
+  
+  //   console.log(hash);
+
+    
   bcrypt.compare(plainPassword, hash, function(err, isMatch){
+    
     if(err) throw err;
-   
+   // console.log(isMatch);
     callback(null,isMatch);
   });
 }
@@ -87,6 +93,10 @@ module.exports.createUser = function(newUser,callback){
     if(err){
         console.log(err);
     }
+    bcrypt.compare(newUser.password,hash,function(err, isMatch){
+      if(err) throw err;
+      console.log(isMatch);
+    })
     newUser.password = hash;
     newUser.save(callback);
   }) 
