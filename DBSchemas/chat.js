@@ -16,6 +16,7 @@ const chatSchema = mongoose.Schema({
 
 const Chat = module.exports = mongoose.model('Chat', chatSchema);
 
-module.exports.insert = function(newChat,callback){
+module.exports.insert = function(chat,callback){
+    let  newChat = new Chat(chat);
     newChat.save(callback);
 }

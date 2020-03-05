@@ -47,9 +47,7 @@
             var statusDefault = status.textContent;
 
             var setStatus = function(s){
-                // Set status
                 status.textContent = s;
-
                 if(s !== statusDefault){
                     var delay = setTimeout(function(){
                         setStatus(statusDefault);
@@ -60,13 +58,9 @@
                 var socket = io.connect('http://127.0.0.1:4000');
 
             }
-            // Connect to socket.io
-
-            // Check for connection
+           
             if(socket !== undefined){
-                //socket.setMaxListeners(2);
                 console.log('Connected to socket...');
-
                 socket.on('connect', (host, port) => { 
                     console.log(`client connected to ${host}:${port}`); 
                     socket.emit('authentication', {username: "<%= username%>", password: "<%= password%>"});
@@ -75,47 +69,41 @@
                             console.log("There was an error with the authentication:", err.message);
                         }
                     });
-                   // console.log(req);
-                   // client.write(‘Hello, I am ${client.address().address}’); 
-                   
+                  
                 }); 
-                // socket.on('disconnect', function () {
-                //     socket.emit('user disconnected');
+
+                // socket.on('previousChat',function(data){
+                //     if(data.length>0){
+                //         for(let i=0;i<data.length;i++){
+                //              var message = document.createElement('div');
+                //             message.setAttribute('class', 'chat-message');
+                //             message.textContent = data[i].sender+": "+data[i].message;
+                //             messages.appendChild(message);
+                //             messages.insertBefore(message, messages.lastChild);
+                //         }
+                //     }
                 // });
-                // Handle Output
-               
                 
                 socket.on('output', function(data){
                     if(data.length>0){
-                        console.log(data.length);
-                        console.log("<<<<<<<<<<<<<<<<<<<<<<<<<< output chat ejs file>>>>>>>>>>>>>>>>>>>>>>>>>>.")
-                        console.log("data = ",data);
-                        // for(var x = 0;x < data.length;x++){
-                            // Build out message div
+                       
                             var message = document.createElement('div');
                             message.setAttribute('class', 'chat-message');
                             message.textContent = data[0].sender+": "+data[0].message;
                             messages.appendChild(message);
                             messages.insertBefore(message, messages.lastChild);
-                       // }
                     }
                 });
 
-                // Get Status From Server
                 socket.on('status', function(data){
-                    // get message status
                     setStatus((typeof data === 'object')? data.message : data);
-
-                    // If status is clear, clear text
                     if(data.clear){
                         textarea.value = '';
                     }
                 });
 
-                // Handle Input
                 textarea.addEventListener('keydown', function(event){
                     if(event.which === 13){
-                        // Emit to server input
                         socket.emit('input', {
                             name:"<%= _id %>",
                             message:textarea.value
@@ -123,12 +111,15 @@
                     }
                 });
 
-            
+                // $(document).ready(function() {
+                //     socket.emit('previousChat');
+                // });
+
+
 
                 $("#send").unbind()
                 .on('click',function(e){
                     e.preventDefault();
-                    console.log("<<<<<<<<<<<===== click ========>>>>>>>>>>>>");
                     socket.emit('input', {
                             name:"<%= _id %>",
                             message:textarea.value
@@ -136,12 +127,10 @@
                    e.preventDefault();
                 });
 
-                // Handle Chat Clear
                 clearBtn.addEventListener('click', function(){
                     socket.emit('clear');
                 });
 
-                // Clear Message
                 socket.on('cleared', function(){
                     messages.textContent = '';
                 });

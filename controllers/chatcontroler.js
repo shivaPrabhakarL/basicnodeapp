@@ -51,8 +51,7 @@ module.exports = function(app){
 
     function bindSocketEvents(socket) {
         socket.on('input', inputEvent);
-
-        // Handle clear
+        socket.on('previousChat',previousChat);
         socket.on('clear', clearEvent);
         socket.on('disconnect', function() {
             console.log('discoennnnnnn');
@@ -62,8 +61,7 @@ module.exports = function(app){
     function unbindSocketEvents(socket) {
         console.log('off caleddd....');
         socket.removeAllListeners('input');
-
-        // Handle clear
+        socket.removeAllListeners('previousChat');
         socket.removeAllListeners('clear');
         console.log('off caleddd....end');
     }
@@ -71,25 +69,17 @@ module.exports = function(app){
     function inputEvent(data){
         let id = data.name.toString();
         let message = data.message;
-
         console.log("id",id);
         User.findOne({_id:id},function(err,user){
-            console.log("<<<<<<<<<<,user user>>>>>>>>>>>.")
             if(err) throw err;
             name = user.name;
-            // console.log("name in user",user.name);
-            // console.log("name in name=  ",name);
-            if(name == '' || message == ''){
-                // Send error status
+          if(name == '' || message == ''){
                 sendStatus('Please enter a name and message');
             } else {
-                // Insert message
-                let chat = new Chat({
+                let chat = {
                     sender:name,
                     message:message,
-                    reciever:'',
-
-                });
+                };
                 Chat.insert(chat,function(err,data){
                     if(err) throw err;
                     server.emit('output', [data]);
@@ -100,6 +90,17 @@ module.exports = function(app){
                 });
             }
         });
+    }
+
+    function previousChat(data){
+        Chat.find({},function(err,chatdata){
+            if(err) throw err;
+            server.emit('output', [chatdata]);
+            sendStatus({
+                message: 'Previous Message sent',
+                clear: true
+            });
+        })
     }
 
     function clearEvent(){
