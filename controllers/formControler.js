@@ -7,21 +7,7 @@ const User = require('../DBSchemas/user');
 
 module.exports = function(app){
 
-    function formValidation(type , value , ){
-        
-
-    }
-
-    app.get('/',function(req,res){
-        res.redirect('/register');
-    })
-
-    app.get('/register', function(req,res){
-        res.render('index');    
-    });
-
-    app.post('/register', urlEncodedParser ,function(req,res){
-       
+    function formValidation(req ,callback){
         req.checkBody('name', 'Name is required').notEmpty();
         req.checkBody('email', 'Email is required').notEmpty();
         req.checkBody('email', 'Email is not valid').isEmail();
@@ -42,9 +28,24 @@ module.exports = function(app){
         });
         req.checkBody('password', 'Password is required').notEmpty();
         req.checkBody('password2', 'Passwords do not match').equals(req.body.password);
-        
-        console.log("after username and email validation");
-         req.getValidationResult().then(function(result){
+
+        req.getValidationResult().then(function(result){
+            callback(result);
+        });
+
+    }
+
+    app.get('/',function(req,res){
+        res.redirect('/register');
+    })
+
+    app.get('/register', function(req,res){
+        res.render('index');    
+    });
+
+    app.post('/register', urlEncodedParser ,function(req,res){
+       
+        formValidation(req,function(result){
             console.log(result.isEmpty());
             if (!result.isEmpty()) {
                 var errors = result.array().map(function (elem) {
@@ -64,8 +65,7 @@ module.exports = function(app){
                 }           
                 User.createUser({ user : user},function(err,user){
                     if(err){
-                        console.log(err);
-                        return res.json({Signup: false, message:'User is not registered'});
+                        return res.json({Signup: false, message:'User is not registered', errors: err.message});
                     }
                     else{
                         return res.render('loginf',{Signup: true, message:'User is registered'});
