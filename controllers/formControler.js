@@ -1,5 +1,4 @@
 const bodyParser = require('body-parser');
-const chat = require('../DBSchemas/chat');
 const server = require('socket.io')();
 const urlEncodedParser = bodyParser.urlencoded({extended: false});
 const { auth } = require("../controllers/auth");

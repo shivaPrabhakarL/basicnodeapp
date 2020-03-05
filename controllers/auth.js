@@ -1,12 +1,9 @@
 const User = require('../DBSchemas/user');
 
 let auth = (req, res, next) => {
-  //console.log("cookie = ",req.cookies);
+
   let token = req.cookies.w_auth;
   let token1 = req.cookies.w_authExp;
-  
-  //  console.log("cookie token in auth = ",token);
-  //  console.log("cookie token in authExp = ",token1);
 
   User.findByToken(token1, (err, user) => {
     if (err) throw err;

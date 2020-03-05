@@ -72,17 +72,18 @@
                   
                 }); 
 
-                // socket.on('previousChat',function(data){
-                //     if(data.length>0){
-                //         for(let i=0;i<data.length;i++){
-                //              var message = document.createElement('div');
-                //             message.setAttribute('class', 'chat-message');
-                //             message.textContent = data[i].sender+": "+data[i].message;
-                //             messages.appendChild(message);
-                //             messages.insertBefore(message, messages.lastChild);
-                //         }
-                //     }
-                // });
+                socket.on('previousChat',function(data){
+                    console.log(data);
+                    if(data.length>0){
+                        for(let i=0;i<data.length;i++){
+                             var message = document.createElement('div');
+                            message.setAttribute('class', 'chat-message');
+                            message.textContent = data[i].sender+": "+data[i].message;
+                            messages.appendChild(message);
+                            messages.insertBefore(message, messages.lastChild);
+                        }
+                    }
+                });
                 
                 socket.on('output', function(data){
                     if(data.length>0){
@@ -111,9 +112,9 @@
                     }
                 });
 
-                // $(document).ready(function() {
-                //     socket.emit('previousChat');
-                // });
+                $(document).ready(function() {
+                    socket.emit('previousChat');
+                });
 
 
 
@@ -131,7 +132,7 @@
                     socket.emit('clear');
                 });
 
-                socket.on('cleared', function(){
+                socket.on('clear', function(){
                     messages.textContent = '';
                 });
             

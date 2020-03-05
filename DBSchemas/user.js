@@ -65,7 +65,6 @@ UserSchema.plugin(passportLocalMongoose);
 const User = module.exports = mongoose.model('User', UserSchema);
 
 module.exports.comparePassword = function(plainPassword, user, callback){  
-  console.log(user);  
     bcrypt.compare(plainPassword, user.password, function(err, isMatch){
         if(err) throw err;
         if(isMatch){

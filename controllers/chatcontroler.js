@@ -1,9 +1,6 @@
-//const db = require('../config/database');
 const server = require('socket.io').listen(4000);
 const { auth } = require("../controllers/auth");
 const socket  = server.sockets;
-const cookie = require('cookie');
-const config = require('../config/key');
 const Chat = require('../DBSchemas/chat');
 const User = require('../DBSchemas/user');
 
@@ -29,7 +26,6 @@ module.exports = function(app){
     }
 
     function disconnect(socket) {
-        console.log(socket.client.user,"=== user");
         console.log(socket.id + ' disconnected');
     }
 
@@ -69,7 +65,6 @@ module.exports = function(app){
     function inputEvent(data){
         let id = data.name.toString();
         let message = data.message;
-        console.log("id",id);
         User.findOne({_id:id},function(err,user){
             if(err) throw err;
             name = user.name;
@@ -95,7 +90,7 @@ module.exports = function(app){
     function previousChat(data){
         Chat.find({},function(err,chatdata){
             if(err) throw err;
-            server.emit('output', [chatdata]);
+            server.emit('previousChat', chatdata);
             sendStatus({
                 message: 'Previous Message sent',
                 clear: true
