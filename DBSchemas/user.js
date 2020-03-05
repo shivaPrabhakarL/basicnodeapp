@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
+const config = require('../config/key');
 
 // User Schema
 const UserSchema = mongoose.Schema({
@@ -35,26 +36,26 @@ tokenExp :{
 }
 });
 
-//UserSchema.set('toObject', { virtuals: true });
+UserSchema.set('toObject', { virtuals: true });
 
-//UserSchema.pre('save', function( next ) {
-//   var user = this;
+UserSchema.pre('save', function( next ) {
+  var user = this;
   
-//   if(user.isModified('password')){    
+  if(user.isModified('password')){    
 
-//       bcrypt.genSalt(10, function(err, salt){
-//           if(err) return next(err);
+      bcrypt.genSalt(10, function(err, salt){
+          if(err) return next(err);
   
-//           bcrypt.hash(user.password, salt, function(err, hash){
-//               if(err) return next(err);
-//               user.password = hash 
-//               next()
-//           })
-//       })
-//   } else {
-//       next()
-//   }
-// });
+          bcrypt.hash(user.password, salt, function(err, hash){
+              if(err) return next(err);
+              user.password = hash 
+              next()
+          })
+      })
+  } else {
+      next()
+  }
+});
 
 
 
@@ -63,52 +64,58 @@ UserSchema.plugin(passportLocalMongoose);
 
 const User = module.exports = mongoose.model('User', UserSchema);
 
-module.exports.comparePassword = function(plainPassword, hash, callback){
-  //console.log(plainPassword);
-  // console.log(plainPassword);
-  
-  //   console.log(hash);
+module.exports.comparePassword = function(plainPassword, user, callback){  
+  console.log(user);  
+    bcrypt.compare(plainPassword, user.password, function(err, isMatch){
+        if(err) throw err;
+        if(isMatch){
+          var id = user._id;
+          var token = jwt.sign({_id:id},config.secret,{expiresIn : 6000000 });
+          User.findOneAndUpdate({ _id: user._id }, { token: token },{new : true},function(err,data){
+            callback(err,data);
+          });
+        }else{
 
-    
-  bcrypt.compare(plainPassword, hash, function(err, isMatch){
-    
-    if(err) throw err;
-   // console.log(isMatch);
-    callback(null,isMatch);
-  });
+        }
+    });
 }
 
 module.exports.getUserById = function(id,callback){
   User.findById(id,callback);
 }
 
+
+
 module.exports.getUserByUsername = function(username,callback){
   User.find({username: username},callback);
 }
 
+
+
 module.exports.createUser = function(newUser,callback){
+  let nUser = new User(newUser.user);
   bcrypt.genSalt(10, function(err, salt){
     if(err) throw err;
-    bcrypt.hash(newUser.password, salt, function(err, hash){
+    bcrypt.hash(nUser.password, salt, function(err, hash){
     if(err){
         console.log(err);
     }
-    bcrypt.compare(newUser.password,hash,function(err, isMatch){
+    bcrypt.compare(nUser.password,hash,function(err, isMatch){
       if(err) throw err;
       console.log(isMatch);
     })
-    newUser.password = hash;
-    newUser.save(callback);
+    nUser.password = hash;
+    nUser.save(callback);
   }) 
   })
 }
 
+
+
 module.exports.findByToken = function (token, callback) {
   var user = this;
-  //console.log("token in find = ",token);
   jwt.verify(token,'yoursecret',function(err, decode){
     if(err) throw err;
-   // console.log("docode = ",decode);
       user.findOne({"_id":decode}, function(err, user){
           if(err) {
             console.log(err);
@@ -118,6 +125,3 @@ module.exports.findByToken = function (token, callback) {
       })
   })
 }
-
-
-///const User = module.exports = mongoose.model('User', UserSchema);

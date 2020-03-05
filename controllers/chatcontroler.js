@@ -1,32 +1,11 @@
-const db = require('../config/database');
+//const db = require('../config/database');
 const server = require('socket.io').listen(4000);
 const { auth } = require("../controllers/auth");
 const socket  = server.sockets;
 const cookie = require('cookie');
-//const connect = require('connect');
-const expressSession = require('express-session');
-//var redisAdapter = require('socket.io-redis');
 const config = require('../config/key');
-//var ConnectRedis = require('connect-redis')(expressSession);
-//var redisSession = new ConnectRedis({host: '127.0.0.1', port: '4000'});
-
-
-
-
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function () {
-    console.log('Connected');
-});
-
-//const pChat = server.of('/chat');
-
 const Chat = require('../DBSchemas/chat');
 const User = require('../DBSchemas/user');
-
-Chat.find({},function(err,dat){
-    if(err) throw err;
-    //console.log("chat data = ",dat);
-})
 
 module.exports = function(app){
 
@@ -38,28 +17,28 @@ module.exports = function(app){
           if (err || !user) return callback(new Error("User not found"));
           return callback(null, user.password == password);
         });
-      }
+    }
         
-      function postAuthenticate(socket, data) {
+    function postAuthenticate(socket, data) {
         var username = data.username;
        
         User.findOne({username:username}, function(err, user) {
             
           socket.client.user = user;
         });
-      }
+    }
 
-      function disconnect(socket) {
+    function disconnect(socket) {
         console.log(socket.client.user,"=== user");
         console.log(socket.id + ' disconnected');
-      }
+    }
 
-      require('socketio-auth')(server, {
+    require('socketio-auth')(server, {
         authenticate: authenticate,
         postAuthenticate: postAuthenticate,
         disconnect: disconnect,
         timeout: 1000
-      });
+    });
 
     server.on('connect',function(socket){
         console.log("<<<<<<<< server socket connected >>>>>..");
@@ -113,10 +92,7 @@ module.exports = function(app){
                 });
                 Chat.insert(chat,function(err,data){
                     if(err) throw err;
-                    console.log("=====================insert=========================");
                     server.emit('output', [data]);
-
-                    // Send status object
                     sendStatus({
                         message: 'Message sent',
                         clear: true
@@ -127,9 +103,7 @@ module.exports = function(app){
     }
 
     function clearEvent(){
-        // Remove all chats from collection
         Chat.deleteMany({}, function(){
-            // Emit cleared
             socket.emit('cleared');
         });
     }
@@ -138,15 +112,7 @@ module.exports = function(app){
     app.get('/chat',auth,function(req,res){
         res.cookie("w_auth", req.user.token);
         res.cookie("w_auth", req.user.token);
-        
-
-       
-
-        
-       
         console.log("socket connection ");
-       // console.log(req.user);
-      
         res.render('chat',{
             _id: req.user._id,
             isAuth: true,
@@ -155,8 +121,6 @@ module.exports = function(app){
             username: req.user.username,
             password: req.user.password
        });
-   
-       
         
     });
 
