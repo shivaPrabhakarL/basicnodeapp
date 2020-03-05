@@ -128,7 +128,7 @@ module.exports = function(app){
 
     function clearEvent(){
         // Remove all chats from collection
-        Chat.remove({}, function(){
+        Chat.deleteMany({}, function(){
             // Emit cleared
             socket.emit('cleared');
         });
