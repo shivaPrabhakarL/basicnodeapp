@@ -1,6 +1,4 @@
 const { auth } = require("../controllers/auth");
-
-
 const {socketConnect} = require('./socketEventFunctions');
 
 

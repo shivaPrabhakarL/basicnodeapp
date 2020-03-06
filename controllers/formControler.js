@@ -13,16 +13,18 @@ module.exports = function(app){
         User.findOne({email:req.body.email}, function(err, user){
             if(err) throw err;
             if(user){
-             req.flash('failure','Email already exists');
-              return ;
+             //req.flash('failure','Email already exists');
+             console.log("email exits");
+             // return ;
             }
         });
         req.checkBody('username', 'Username is required').notEmpty();
         User.findOne({username:req.body.username}, function(err, user){
             if(err) throw err;
             if(user){
-              req.flash('failure','Username already exists');
-              return ;
+              //req.flash('failure','Username already exists');
+              console.log("username exits");
+            //   return ;
             }
         });
         req.checkBody('password', 'Password is required').notEmpty();
@@ -32,6 +34,20 @@ module.exports = function(app){
             callback(result);
         });
 
+    }
+
+    function loginVerification(username,password,callback){
+        User.getUserByUsername(username,function(err,user){
+            if(err) throw err;
+            if(user.length === 0){
+                return res.json({Login: false, message:'No such user found'});   
+            }
+             var user1 = user[0];
+            User.comparePassword(password,user1,function(err,data){
+                console.log(data);
+                            callback(err,data);                        
+            });
+        });
     }
 
     app.get('/',function(req,res){
@@ -50,8 +66,8 @@ module.exports = function(app){
                 var errors = result.array().map(function (elem) {
                     return elem.msg;
                 });
-                console.log('There are following validation errors: ' + errors.join('&&'));
-                res.render('index', { errors: errors });
+                console.log('There are following validation errors: ' + errors.join(' && '));
+                req.flash('failure', errors.join(' && ') );
             } 
         else {          
                 var user =  {
@@ -88,25 +104,18 @@ module.exports = function(app){
            if(req.cookie.w_authExp !== '')
                 res.redirect('/chat');
        }
-        User.getUserByUsername(req.body.logusername,function(err,user){
+        loginVerification(req.body.logusername,req.body.logpassword,function(err,data){
             if(err) throw err;
-            if(user.length === 0){
-                return res.json({Login: false, message:'No such user found'});   
+            if(data !== undefined ){
+                        
+            res.cookie("w_authExp", data.token);
+            res.cookie("w_auth",data.token);
+            res.redirect('/chat');
+            } else{
+                return res.json({Login: false, message:'Password doesn\'t match.'});
             }
-             var user1 = user[0];
-            User.comparePassword(req.body.logpassword,user1,function(err,data){
-                        if(err) throw err;
-                        if(data !== undefined ){
-                        res.cookie("w_authExp", data.token);
-                        res.cookie("w_auth",data.token);
-                        res.redirect('/chat');
-                        } else{
-                            return res.json({Login: false, message:'Password doesn\'t match.'});
-                        }
-                    })
-               
-            })
         });
+    });
     
 
       app.get("/logout", auth, (req, res) => {
