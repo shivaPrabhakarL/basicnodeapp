@@ -95,11 +95,8 @@ function inputEvent(data){
 
 
 function previousChat(data){
-    console.log("previousChat............................")
     Chat.find({},function(err,chatdata){
         if(err) throw err;
-        console.log("previous find ///////////////////////////");
-        console.log("chat data = ",chatdata);
         server.emit('previousChat', chatdata);
         sendStatus({
             message: 'Previous Message sent',

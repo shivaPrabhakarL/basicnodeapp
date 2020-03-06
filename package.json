@@ -4,7 +4,7 @@
   "description": "learning sockets",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "author": "",
   "license": "ISC",
@@ -22,12 +22,15 @@
     "express-validator": "^3.2.0",
     "flash": "^1.1.0",
     "jest": "^25.1.0",
+    "jsdom": "^16.2.0",
     "jsonwebtoken": "^8.5.1",
+    "mocha": "^7.1.0",
     "mongodb": "*",
     "mongoose": "^5.9.2",
     "mongoose-unique-validator": "*",
     "nodemon": "^2.0.2",
     "socket.io": "*",
-    "socketio-auth": "^0.1.1"
+    "socketio-auth": "^0.1.1",
+    "supertest": "^4.0.2"
   }
 }

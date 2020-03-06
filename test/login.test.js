@@ -1,0 +1,53 @@
+//const {main} = require('../controllers/MainControler');
+const {app}  = require('../index');
+const {loginVerification} = require('../controllers/formControler');
+const {dbConnect} = require('../config/database');
+const {chatcontroler} = require('../controllers/chatcontroler');
+const req = require('supertest');
+const fs = require('fs');
+const path = require('path');
+const html = fs.readFileSync(path.resolve(__dirname,'../views/loginf.ejs'),'utf8');
+const indexhtml = fs.readFileSync(path.resolve(__dirname,'../views/index.ejs'),'utf8');
+
+jest.dontMock('fs');
+//var appl;
+beforeAll(()=>{
+   dbConnect();
+
+ });
+
+ test('Login Verification',function(){
+    loginVerification("prabha_79","prabha_7",function(err,data){
+        expect(data.name).toBe('shivai7sdfg');
+    });
+ });
+
+ test('Login get url',async function(){
+      var res = await req(app).get('/login');
+      expect(res.text).toBe(html);
+ });
+
+ test('Login post url',async function(){
+   var res = await req(app).post('/login')
+   .send({logusername: 'prabha_79',logpassword:'prabha_7'});
+   expect(res.text).toBe("Found. Redirecting to /chat");
+ });
+
+ test('Register get url', async function(){
+    var res = await req(app).get('/register');
+    expect(res.text).toBe(indexhtml);
+ });
+
+ test('Register post url', function(){
+  
+   setTimeout(async () => {
+      var res = await  req(app).post('/register')
+      .send({name: 'shiva prasad',email:'prasad7@gmail.com',usernmae:'prasad_7',password:'prasad-7',password2:'prasad-7'});    
+      expect(res.text).toBe(html);
+   },6000);
+   
+ });
+
+ test('Chat get url',function(){
+
+ });

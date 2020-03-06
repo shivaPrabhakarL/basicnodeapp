@@ -7,6 +7,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const mainC = require('./controllers/MainControler');
 
+
 app.use(cors());
 
 app.use(expressValidator())
@@ -46,8 +47,15 @@ app.use(cookieParser());
 
 app.set('port',3030);
 
+var port = 3000;
 app.set('view engine','ejs');
+
+app.listen(port);
+
+//return app;
+
+
 
 mainC(app);
 
-app.listen(3030);
+module.exports = {app};

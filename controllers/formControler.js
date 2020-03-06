@@ -4,50 +4,54 @@ const urlEncodedParser = bodyParser.urlencoded({extended: false});
 const { auth } = require("../controllers/auth");
 const User = require('../DBSchemas/user');
 
-module.exports = function(app){
-
-    function formValidation(req ,callback){
-        req.checkBody('name', 'Name is required').notEmpty();
-        req.checkBody('email', 'Email is required').notEmpty();
-        req.checkBody('email', 'Email is not valid').isEmail();
-        User.findOne({email:req.body.email}, function(err, user){
-            if(err) throw err;
-            if(user){
-             //req.flash('failure','Email already exists');
-             console.log("email exits");
-             // return ;
-            }
+function loginVerification(username,password,callback){
+    User.getUserByUsername(username,function(err,user){
+        if(err) throw err;
+        if(user.length === 0){
+            return ({Login: false, message:'No such user found'});   
+        }
+         var user1 = user[0];
+        User.comparePassword(password,user1,function(err,data){
+            callback(err,data);                        
         });
-        req.checkBody('username', 'Username is required').notEmpty();
-        User.findOne({username:req.body.username}, function(err, user){
-            if(err) throw err;
-            if(user){
-              //req.flash('failure','Username already exists');
-              console.log("username exits");
-            //   return ;
-            }
-        });
-        req.checkBody('password', 'Password is required').notEmpty();
-        req.checkBody('password2', 'Passwords do not match').equals(req.body.password);
+    });
+}
 
-        req.getValidationResult().then(function(result){
-            callback(result);
-        });
+function formValidation(req ,callback){
+    req.checkBody('name', 'Name is required').notEmpty();
+    req.checkBody('email', 'Email is required').notEmpty();
+    req.checkBody('email', 'Email is not valid').isEmail();
+    User.findOne({email:req.body.email}, function(err, user){
+        if(err) throw err;
+        if(user){
+         //req.flash('failure','Email already exists');
+         console.log("email exits");
+         // return ;
+        }
+    });
+    req.checkBody('username', 'Username is required').notEmpty();
+    User.findOne({username:req.body.username}, function(err, user){
+        if(err) throw err;
+        if(user){
+          //req.flash('failure','Username already exists');
+          console.log("username exits");
+        //   return ;
+        }
+    });
+    req.checkBody('password', 'Password is required').notEmpty();
+    req.checkBody('password2', 'Passwords do not match').equals(req.body.password);
 
-    }
+    req.getValidationResult().then(function(result){
+        callback(result);
+    });
 
-    function loginVerification(username,password,callback){
-        User.getUserByUsername(username,function(err,user){
-            if(err) throw err;
-            if(user.length === 0){
-                return res.json({Login: false, message:'No such user found'});   
-            }
-             var user1 = user[0];
-            User.comparePassword(password,user1,function(err,data){
-                callback(err,data);                        
-            });
-        });
-    }
+}
+
+
+ function fromcontroler(app){
+
+  
+  
 
     app.get('/',function(req,res){
         res.redirect('/register');
@@ -60,12 +64,12 @@ module.exports = function(app){
     app.post('/register', urlEncodedParser ,function(req,res){
        
         formValidation(req,function(result){
-            console.log(result.isEmpty());
+           //// console.log(result.isEmpty());
             if (!result.isEmpty()) {
                 var errors = result.array().map(function (elem) {
                     return elem.msg;
                 });
-                console.log('There are following validation errors: ' + errors.join(' && '));
+               // console.log('There are following validation errors: ' + errors.join(' && '));
                 req.flash('failure', errors.join(' && ') );
             } 
         else {          
@@ -104,9 +108,9 @@ module.exports = function(app){
                 res.redirect('/chat');
        }
         loginVerification(req.body.logusername,req.body.logpassword,function(err,data){
+            console.log(req.body.logpassword);
             if(err) throw err;
             if(data !== "error" ){
-                console.log("loginverfy");
                 res.cookie("w_authExp", data.token);
                 res.cookie("w_auth",data.token);
                 res.redirect('/chat');
@@ -131,3 +135,5 @@ module.exports = function(app){
 
    
     }
+
+    module.exports = {loginVerification,fromcontroler};

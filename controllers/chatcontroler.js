@@ -1,10 +1,10 @@
 const { auth } = require("../controllers/auth");
 const {socketConnect} = require('./socketEventFunctions');
+socketConnect();
 
+ function chatcontroler(app){
 
-module.exports = function(app){
-
-    socketConnect();
+    
 
     app.get('/chat',auth,function(req,res){
         res.cookie("w_auth", req.user.token);
@@ -22,3 +22,5 @@ module.exports = function(app){
     });
 
 }
+
+module.exports = {chatcontroler};

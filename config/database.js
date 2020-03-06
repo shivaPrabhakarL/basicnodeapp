@@ -4,11 +4,12 @@ mongo.connect('mongodb://localhost:27018/test',{useNewUrlParser: true, useUnifie
 
 
 
-module.exports  =  function(){
+ function dbConnect(){
     var db = mongo.connection;
     db.on('error', console.error.bind(console, 'connection error:'));
     db.once('open', function () {
-        console.log('Connected');
+       // console.log('Connected');
     });
 };
 
+module.exports  = {dbConnect};
