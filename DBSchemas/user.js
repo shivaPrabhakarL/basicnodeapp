@@ -63,20 +63,15 @@ UserSchema.plugin(uniqueValidator);
 const User = module.exports = mongoose.model('User', UserSchema);
 
 module.exports.comparePassword = function(plainPassword, user, callback){  
-  console.log("in compare");
     bcrypt.compare(plainPassword, user.password, function(err, isMatch){
-        console.log("comparing");
         if(err) throw err;
         if(isMatch){
-          console.log("matched");
           var id = user._id;
           var token = jwt.sign({_id:id},config.secret,{expiresIn : 6000000 });
           User.findOneAndUpdate({ _id: user._id }, { token: token },{new : true},function(err,data){
-            console.log("user update");
             callback(err,data);
           });
         }else{
-          console.log("password doesn't match");
           callback(err,"error");
         }
     });
@@ -104,7 +99,6 @@ module.exports.createUser = function(newUser,callback){
     }
     bcrypt.compare(nUser.password,hash,function(err, isMatch){
       if(err) throw err;
-      console.log(isMatch);
     })
     nUser.password = hash;
     nUser.save(callback);
