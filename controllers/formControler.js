@@ -38,12 +38,16 @@ module.exports = function(app){
 
     function loginVerification(username,password,callback){
         User.getUserByUsername(username,function(err,user){
+            console.log("get user");
             if(err) throw err;
             if(user.length === 0){
+                console.log("no user");
                 return res.json({Login: false, message:'No such user found'});   
             }
              var user1 = user[0];
+             console.log(user1);
             User.comparePassword(password,user1,function(err,data){
+                console.log("compare");
                 console.log(data);
                             callback(err,data);                        
             });
@@ -106,11 +110,11 @@ module.exports = function(app){
        }
         loginVerification(req.body.logusername,req.body.logpassword,function(err,data){
             if(err) throw err;
-            if(data !== undefined ){
-                        
-            res.cookie("w_authExp", data.token);
-            res.cookie("w_auth",data.token);
-            res.redirect('/chat');
+            if(data !== "error" ){
+                console.log("loginverfy");
+                res.cookie("w_authExp", data.token);
+                res.cookie("w_auth",data.token);
+                res.redirect('/chat');
             } else{
                 return res.json({Login: false, message:'Password doesn\'t match.'});
             }
