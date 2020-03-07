@@ -32,5 +32,8 @@
     "socket.io": "*",
     "socketio-auth": "^0.1.1",
     "supertest": "^4.0.2"
+  },
+  "devDependencies": {
+    "should": "^13.2.3"
   }
 }
