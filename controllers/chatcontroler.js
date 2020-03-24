@@ -6,7 +6,7 @@ socketConnect();
 
     
 
-    app.get('/chat',auth,function(req,res){
+    app.get('/api/chat',auth,function(req,res){
         res.cookie("w_auth", req.user.token);
         res.cookie("w_auth", req.user.token);
         console.log("socket connection ");

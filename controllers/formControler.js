@@ -3,15 +3,20 @@ const server = require('socket.io')();
 const urlEncodedParser = bodyParser.urlencoded({extended: false});
 const { auth } = require("../controllers/auth");
 const User = require('../DBSchemas/user');
+const passport = require('passport');
+
+console.log(typeof(User));
 
 function loginVerification(username,password,callback){
     User.getUserByUsername(username,function(err,user){
+        console.log("232144324");
         if(err) throw err;
         if(user.length === 0){
             return ({Login: false, message:'No such user found'});   
         }
          var user1 = user[0];
         User.comparePassword(password,user1,function(err,data){
+            console.log("dunewdiubnewbfewidqu1w1`w");
             callback(err,data);                        
         });
     });
@@ -47,6 +52,12 @@ function formValidation(req ,callback){
 
 }
 
+User.find({}).distinct("email",(err,data) =>{
+    if(err) throw err;
+    data.forEach((id) =>{
+        console.log(id);
+    })
+})
 
  function fromcontroler(app){
 
@@ -54,14 +65,14 @@ function formValidation(req ,callback){
   
 
     app.get('/',function(req,res){
-        res.redirect('/register');
+        res.redirect('/api/register');
     })
 
-    app.get('/register', function(req,res){
+    app.get('/api/register', function(req,res){
         res.render('index');    
     });
 
-    app.post('/register', urlEncodedParser ,function(req,res){
+    app.post('/api/register', urlEncodedParser ,function(req,res){
        
         formValidation(req,function(result){
            //// console.log(result.isEmpty());
@@ -94,42 +105,68 @@ function formValidation(req ,callback){
         });
     });
 
-    app.get('/login', function(req, res){
+    app.get('/api/login', function(req, res){
         res.render('loginf');
     });
 
-    app.post('/login', urlEncodedParser ,function(req, res ){
+    app.post('/api/login', urlEncodedParser ,function(req, res ){
+        console.log("req cookie",req.cookie);
        if(req.cookie !== undefined  ){
            if(req.cookie.w_auth !== '')
-                res.redirect('/chat');
+                res.redirect('/api/chat');
        }
        if(req.cookie !== undefined ){
            if(req.cookie.w_authExp !== '')
-                res.redirect('/chat');
+                res.redirect('/api/chat');
        }
         loginVerification(req.body.logusername,req.body.logpassword,function(err,data){
-            console.log(req.body.logpassword);
+            // console.log("bdjdbsbch");
+            // console.log(req.body.logpasswor,"111d");
             if(err) throw err;
             if(data !== "error" ){
                 res.cookie("w_authExp", data.token);
                 res.cookie("w_auth",data.token);
-                res.redirect('/chat');
+                res.redirect('/api/chat');
             } else{
                 return res.json({Login: false, message:'Password doesn\'t match.'});
             }
         });
     });
+
+
+    console.log("udsgvubfcew");
+
+    app.get('/auth/google',
+  passport.authenticate('google', { scope: [ 'https://www.googleapis.com/auth/plus.login',
+  , 'https://www.googleapis.com/auth/plus.profile.emails.read' ]  }),function(req,res){
+      console.log("hello");
+     
+  });
+
+  app.get( '/auth/google/callback', 
+  passport.authenticate( 'google', { 
+      
+      failureRedirect: '/auth/google/failure'
+}),function(req,res){
+    console.log("req = ",req._passport.session.user);
+    let user = req._passport.session.user;
+    res.cookie("w_authExp", user);
+    res.cookie("w_auth",user);
+    res.redirect('/api/chat');
+});
     
 
-      app.get("/logout", auth, (req, res) => {
-        User.findOneAndUpdate({ _id: req.user._id }, { token: "", tokenExp: "" }, (err, doc) => {
+      app.get("/api/logout", auth, (req, res) => {
+          console.log(req.cookies.w_auth);
+        User.findOneAndUpdate({ token: req.cookies.w_auth }, { token: "", tokenExp: "" }, (err, doc) => {
             if (err) return res.json({ success: false, err });
             server.on('disconnect', function() {
                 console.log("<<<<<<<<<<<<<<<<<<<<disconected>>>>>>>>>>>>>>")
             });
             res.cookie("w_auth","");
             res.cookie("w_authExp","");
-            res.redirect('/login');
+            console.log(res.cookie);
+            res.redirect('/api/login');
         });
     });
 

@@ -30,8 +30,8 @@ beforeAll(()=>{
  test('Login post url',async function(){
    var res = await req(app).post('/login')
    .send({logusername: 'prabha_79',logpassword:'prabha_7'});
+   expect(res.text).toBe("Found. Redirecting to /chat");
    
-expect(res.text).toBe("Found. Redirecting to /chat");
 });
 
  

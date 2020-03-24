@@ -1,6 +1,6 @@
 const Chat = require('../DBSchemas/chat');
 const User = require('../DBSchemas/user');
-const server = require('socket.io').listen(4000);
+const server = require('socket.io').listen(6000);
 const socket  = server.sockets;
 
 

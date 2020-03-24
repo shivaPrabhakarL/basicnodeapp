@@ -6,13 +6,45 @@
         <h1> Login to Chat </h1>
 
         <div id="logindiv">
-            <form id="li-form" action="/login" method="POST">
+            <form id="li-form" action="/api/login" method="POST">
                 <label>Enter Username :</label>
                 <input name="logusername" id="logusername" type="text" required> <br/><br/>
                 <label>Enter Password :</label>
                 <input name="logpassword" id="logpassword" type="password" required> <br/><br/>
                 <input type="submit" value="Log In">
             </form>
+        </div>
+
+        <div>
+            <a href="/auth/google"><h4 >Login with Google</h4></a>
+            <script >
+
+FB.getLoginStatus(function(response) {
+    console.log(response);
+});
+            </script>
+
+<script>
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId      : '224400885283299',
+        cookie     : true,
+        xfbml      : true,
+        version    : 'v3.1'
+      });
+        
+      FB.AppEvents.logPageView();   
+      FBSdkLoaded()
+    };
+  
+    (function(d, s, id){
+       var js, fjs = d.getElementsByTagName(s)[0];
+       if (d.getElementById(id)) {return;}
+       js = d.createElement(s); js.id = id;
+       js.src = "https://connect.facebook.net/en_US/sdk.js";
+       fjs.parentNode.insertBefore(js, fjs);
+     }(document, 'script', 'facebook-jssdk'));
+  </script>
         </div>
     </body>
 </html>
