@@ -24,7 +24,7 @@
     "flash": "^1.1.0",
     "jest": "^25.1.0",
     "jsdom": "^16.2.0",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.0",
     "mocha": "^7.1.0",
     "mongodb": "*",
     "mongoose": "^5.9.2",
